@@ -196,7 +196,7 @@ paths:
             example:
               title: "Complete project documentation"
               description: "Write comprehensive documentation for the new feature including API endpoints and user guides"
-              status: "PENDING"
+              status: "Pending"
               assignedUser: "507f1f77bcf86cd799439012"
               dueDate: "2024-02-15T10:00:00.000Z"
       responses:
@@ -218,7 +218,7 @@ paths:
                   taskId: "507f1f77bcf86cd799439013"
                   title: "Complete project documentation"
                   description: "Write comprehensive documentation for the new feature including API endpoints and user guides"
-                  status: "PENDING"
+                  status: "Pending"
                   assignedUser:
                     userId: "507f1f77bcf86cd799439012"
                     fullName: "Jane Smith"
@@ -263,7 +263,7 @@ paths:
           required: false
           schema:
             $ref: "#/components/schemas/Status"
-          example: "PENDING"
+          example: "Pending"
         - name: dueDate
           in: query
           description: Filter tasks by due date (ISO 8601 format)
@@ -299,7 +299,7 @@ paths:
                   - taskId: "507f1f77bcf86cd799439013"
                     title: "Complete project documentation"
                     description: "Write comprehensive documentation for the new feature"
-                    status: "PENDING"
+                    status: "Pending"
                     assignedUser:
                       userId: "507f1f77bcf86cd799439012"
                       fullName: "Jane Smith"
@@ -343,7 +343,7 @@ paths:
                   taskId: "507f1f77bcf86cd799439013"
                   title: "Complete project documentation"
                   description: "Write comprehensive documentation for the new feature"
-                  status: "PENDING"
+                  status: "Pending"
                   assignedUser:
                     userId: "507f1f77bcf86cd799439012"
                     fullName: "Jane Smith"
@@ -390,7 +390,7 @@ paths:
             example:
               title: "Complete project documentation - Updated"
               description: "Write comprehensive documentation for the new feature including API endpoints, user guides, and examples"
-              status: "IN_PROGRESS"
+              status: "In Progress"
               dueDate: "2024-02-20T10:00:00.000Z"
       responses:
         "200":
@@ -411,7 +411,7 @@ paths:
                   taskId: "507f1f77bcf86cd799439013"
                   title: "Complete project documentation - Updated"
                   description: "Write comprehensive documentation for the new feature including API endpoints, user guides, and examples"
-                  status: "IN_PROGRESS"
+                  status: "In Progress"
                   assignedUser:
                     userId: "507f1f77bcf86cd799439012"
                     fullName: "Jane Smith"
@@ -515,9 +515,9 @@ components:
   schemas:
     Status:
       type: string
-      enum: [PENDING, IN_PROGRESS, COMPLETED]
+      enum: [Pending, In Progress, Completed]
       description: Task status indicating the current state of the task
-      example: "PENDING"
+      example: "Pending"
 
     RegisterDto:
       type: object
