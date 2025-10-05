@@ -1,0 +1,714 @@
+openapi: 3.0.0
+info:
+  title: Task Management API
+  description: |
+    A comprehensive Task Management API built with NestJS and MongoDB. 
+    This API provides authentication, user management, and full CRUD operations for tasks.
+
+    ## Features
+    - 🔐 JWT-based authentication
+    - 👥 User management
+    - 📋 Task creation, reading, updating, and deletion
+    - 🔍 Advanced task filtering and search
+    - 🛡️ Role-based access control
+
+    ## Authentication
+    Most endpoints require authentication. Include the JWT token in the Authorization header:
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+
+    ## Getting Started
+    1. Register a new user account
+    2. Login to get your JWT token
+    3. Use the token to access protected endpoints
+  version: 1.0.0
+
+paths:
+  /:
+    get:
+      summary: Health Check
+      description: Returns a simple health check message to verify the API is running
+      tags:
+        - Health
+      responses:
+        "200":
+          description: API is healthy and running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Hey, It's working 🎉"
+              example:
+                message: "Hey, It's working 🎉"
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Create a new user account with email and password
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDto"
+            example:
+              fullName: "John Doe"
+              email: "john.doe@example.com"
+              password: "securepassword123"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
+              example:
+                message: "User registered successfully"
+                user:
+                  userId: "507f1f77bcf86cd799439011"
+                  fullName: "John Doe"
+                  email: "john.doe@example.com"
+        "400":
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+              example:
+                message: "Validation failed"
+                errors:
+                  - "Email must be a valid email address"
+                  - "Password must be at least 8 characters long"
+
+  /auth/login:
+    post:
+      summary: Login user
+      description: Authenticate user and receive JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDto"
+            example:
+              email: "john.doe@example.com"
+              password: "securepassword123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
+              example:
+                message: "Login successful"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MDdmMWY3N2JjZjg2Y2Q3OTk0MzkwMTEiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                user:
+                  userId: "507f1f77bcf86cd799439011"
+                  fullName: "John Doe"
+                  email: "john.doe@example.com"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Invalid email or password"
+                statusCode: 401
+
+  /users:
+    get:
+      summary: Get all users
+      description: Retrieve a list of all registered users
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserResponse"
+              example:
+                users:
+                  - userId: "507f1f77bcf86cd799439011"
+                    fullName: "John Doe"
+                    email: "john.doe@example.com"
+                  - userId: "507f1f77bcf86cd799439012"
+                    fullName: "Jane Smith"
+                    email: "jane.smith@example.com"
+        "401":
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "No token provided"
+                error: "Unauthorized"
+                statusCode: 401
+
+  /tasks:
+    post:
+      summary: Create a new task
+      description: Create a new task with title, description, due date, and optional assignment
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskDto"
+            example:
+              title: "Complete project documentation"
+              description: "Write comprehensive documentation for the new feature including API endpoints and user guides"
+              status: "PENDING"
+              assignedUser: "507f1f77bcf86cd799439012"
+              dueDate: "2024-02-15T10:00:00.000Z"
+      responses:
+        "201":
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Task created successfully"
+                  task:
+                    $ref: "#/components/schemas/TaskResponse"
+              example:
+                message: "Task created successfully"
+                task:
+                  taskId: "507f1f77bcf86cd799439013"
+                  title: "Complete project documentation"
+                  description: "Write comprehensive documentation for the new feature including API endpoints and user guides"
+                  status: "PENDING"
+                  assignedUser:
+                    userId: "507f1f77bcf86cd799439012"
+                    fullName: "Jane Smith"
+                    email: "jane.smith@example.com"
+                  dueDate: "2024-02-15T10:00:00.000Z"
+                  createdBy:
+                    userId: "507f1f77bcf86cd799439011"
+                    fullName: "John Doe"
+                    email: "john.doe@example.com"
+                  createdAt: "2024-01-15T08:30:00.000Z"
+                  updatedAt: "2024-01-15T08:30:00.000Z"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+              example:
+                message: "Validation failed"
+                errors:
+                  - "Title must be at least 5 characters long"
+                  - "Due date must be a valid date"
+        "401":
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Unauthorized"
+                statusCode: 401
+
+    get:
+      summary: Get tasks with filters
+      description: Retrieve tasks with optional filtering by status, due date, and search term
+      tags:
+        - Tasks
+      parameters:
+        - name: status
+          in: query
+          description: Filter tasks by status
+          required: false
+          schema:
+            $ref: "#/components/schemas/Status"
+          example: "PENDING"
+        - name: dueDate
+          in: query
+          description: Filter tasks by due date (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: "2024-02-15T00:00:00.000Z"
+        - name: search
+          in: query
+          description: Search tasks by title or description
+          required: false
+          schema:
+            type: string
+          example: "documentation"
+      responses:
+        "200":
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TaskResponse"
+                  total:
+                    type: integer
+                    example: 25
+              example:
+                tasks:
+                  - taskId: "507f1f77bcf86cd799439013"
+                    title: "Complete project documentation"
+                    description: "Write comprehensive documentation for the new feature"
+                    status: "PENDING"
+                    assignedUser:
+                      userId: "507f1f77bcf86cd799439012"
+                      fullName: "Jane Smith"
+                      email: "jane.smith@example.com"
+                    dueDate: "2024-02-15T10:00:00.000Z"
+                    createdBy:
+                      userId: "507f1f77bcf86cd799439011"
+                      fullName: "John Doe"
+                      email: "john.doe@example.com"
+                    createdAt: "2024-01-15T08:30:00.000Z"
+                    updatedAt: "2024-01-15T08:30:00.000Z"
+                total: 25
+
+  /tasks/{taskId}:
+    get:
+      summary: Get a specific task
+      description: Retrieve a single task by its ID
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          description: MongoDB ObjectId of the task
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+          example: "507f1f77bcf86cd799439013"
+      responses:
+        "200":
+          description: Task retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task:
+                    $ref: "#/components/schemas/TaskResponse"
+              example:
+                task:
+                  taskId: "507f1f77bcf86cd799439013"
+                  title: "Complete project documentation"
+                  description: "Write comprehensive documentation for the new feature"
+                  status: "PENDING"
+                  assignedUser:
+                    userId: "507f1f77bcf86cd799439012"
+                    fullName: "Jane Smith"
+                    email: "jane.smith@example.com"
+                  dueDate: "2024-02-15T10:00:00.000Z"
+                  createdBy:
+                    userId: "507f1f77bcf86cd799439011"
+                    fullName: "John Doe"
+                    email: "john.doe@example.com"
+                  createdAt: "2024-01-15T08:30:00.000Z"
+                  updatedAt: "2024-01-15T08:30:00.000Z"
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Task not found"
+                statusCode: 404
+
+    patch:
+      summary: Update a task
+      description: Update an existing task. Only the task creator or assigned user can update it.
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          description: MongoDB ObjectId of the task
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+          example: "507f1f77bcf86cd799439013"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskDto"
+            example:
+              title: "Complete project documentation - Updated"
+              description: "Write comprehensive documentation for the new feature including API endpoints, user guides, and examples"
+              status: "IN_PROGRESS"
+              dueDate: "2024-02-20T10:00:00.000Z"
+      responses:
+        "200":
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Task updated successfully"
+                  task:
+                    $ref: "#/components/schemas/TaskResponse"
+              example:
+                message: "Task updated successfully"
+                task:
+                  taskId: "507f1f77bcf86cd799439013"
+                  title: "Complete project documentation - Updated"
+                  description: "Write comprehensive documentation for the new feature including API endpoints, user guides, and examples"
+                  status: "IN_PROGRESS"
+                  assignedUser:
+                    userId: "507f1f77bcf86cd799439012"
+                    fullName: "Jane Smith"
+                    email: "jane.smith@example.com"
+                  dueDate: "2024-02-20T10:00:00.000Z"
+                  createdBy:
+                    userId: "507f1f77bcf86cd799439011"
+                    fullName: "John Doe"
+                    email: "john.doe@example.com"
+                  createdAt: "2024-01-15T08:30:00.000Z"
+                  updatedAt: "2024-01-15T09:15:00.000Z"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - User not authorized to update this task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "You are not authorized to update this task"
+                statusCode: 403
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a task
+      description: Delete an existing task. Only the task creator can delete it.
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          description: MongoDB ObjectId of the task
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+          example: "507f1f77bcf86cd799439013"
+      responses:
+        "200":
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Task deleted successfully"
+              example:
+                message: "Task deleted successfully"
+        "401":
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - User not authorized to delete this task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "You are not authorized to delete this task"
+                statusCode: 403
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from the login endpoint. 
+        Include the token in the Authorization header as: `Bearer <token>`
+
+  schemas:
+    Status:
+      type: string
+      enum: [PENDING, IN_PROGRESS, COMPLETED]
+      description: Task status indicating the current state of the task
+      example: "PENDING"
+
+    RegisterDto:
+      type: object
+      required:
+        - fullName
+        - email
+        - password
+      properties:
+        fullName:
+          type: string
+          description: User's full name
+          minLength: 1
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address (must be unique)
+          example: "john.doe@example.com"
+        password:
+          type: string
+          description: User's password (minimum 8 characters)
+          minLength: 8
+          example: "securepassword123"
+
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          description: User's password
+          minLength: 8
+          example: "securepassword123"
+
+    CreateTaskDto:
+      type: object
+      required:
+        - title
+        - description
+        - dueDate
+      properties:
+        title:
+          type: string
+          description: Task title
+          minLength: 5
+          example: "Complete project documentation"
+        description:
+          type: string
+          description: Detailed task description
+          minLength: 5
+          example: "Write comprehensive documentation for the new feature including API endpoints and user guides"
+        status:
+          $ref: "#/components/schemas/Status"
+        assignedUser:
+          type: string
+          description: MongoDB ObjectId of the user to assign the task to
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: "507f1f77bcf86cd799439012"
+        dueDate:
+          type: string
+          format: date-time
+          description: Task due date in ISO 8601 format
+          example: "2024-02-15T10:00:00.000Z"
+
+    UpdateTaskDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Updated task title
+          minLength: 5
+          example: "Complete project documentation - Updated"
+        description:
+          type: string
+          description: Updated task description
+          minLength: 5
+          example: "Write comprehensive documentation for the new feature including API endpoints, user guides, and examples"
+        status:
+          $ref: "#/components/schemas/Status"
+        assignedUser:
+          type: string
+          description: MongoDB ObjectId of the user to assign the task to
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: "507f1f77bcf86cd799439012"
+        dueDate:
+          type: string
+          format: date-time
+          description: Updated task due date in ISO 8601 format
+          example: "2024-02-20T10:00:00.000Z"
+
+    UserResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: MongoDB ObjectId of the user
+          example: "507f1f77bcf86cd799439011"
+        fullName:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+
+    TaskResponse:
+      type: object
+      properties:
+        taskId:
+          type: string
+          description: MongoDB ObjectId of the task
+          example: "507f1f77bcf86cd799439013"
+        title:
+          type: string
+          description: Task title
+          example: "Complete project documentation"
+        description:
+          type: string
+          description: Task description
+          example: "Write comprehensive documentation for the new feature"
+        status:
+          $ref: "#/components/schemas/Status"
+        assignedUser:
+          $ref: "#/components/schemas/UserResponse"
+          description: User object assigned to the task (populated)
+        dueDate:
+          type: string
+          format: date-time
+          description: Task due date
+          example: "2024-02-15T10:00:00.000Z"
+        createdBy:
+          $ref: "#/components/schemas/UserResponse"
+          description: User object who created the task (populated)
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+          example: "2024-01-15T08:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Task last update timestamp
+          example: "2024-01-15T08:30:00.000Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "An error occurred"
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Error type
+          example: "Bad Request"
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Validation error message
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: string
+          description: Array of validation error messages
+          example:
+            - "Title must be at least 5 characters long"
+            - "Due date must be a valid date"
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Authentication
+    description: User authentication and registration
+  - name: Users
+    description: User management operations
+  - name: Tasks
+    description: Task management operations including CRUD operations and filtering
